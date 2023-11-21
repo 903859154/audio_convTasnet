@@ -33,7 +33,7 @@ def get_args():
     #         "all the worker processes must have access to the directory."))
     parser.add_argument("--exp",default=Path("./exp"), type=Path,
                         help="The directory to save checkpoints and logs.")
-    parser.add_argument("--checkpoint", default=0, help="checkpoint model")
+    parser.add_argument("--checkpoint", help="checkpoint model")
 
     #Training Options
     parser.add_argument("--batch_size", default=8, type=int)
@@ -61,7 +61,7 @@ def get_args():
                         )
     parser.add_argument("--grad_clip", metavar="CLIP_VALUE", default=5.0,type=float,
                        help="Gradient clip value (l2 norm). (default: 5.0)",)
-    parser.add_argument("--resume", metavar="./exp/checkpoint",
+    parser.add_argument("--resume", metavar="./exp/model",
                        help="Previous checkpoint file from which the training is resumed.",)
     parser.add_argument("--debug", action="store_true", help="Enable debug log")
 
