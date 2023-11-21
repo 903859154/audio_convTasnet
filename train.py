@@ -31,11 +31,10 @@ def get_args():
     # parser.add_argument("--save-dir", default=Path("./exp"), required=True, type=pathlib.Path, help=("Directory where the checkpoints and logs are saved."
     #         "Though, only the worker 0 saves checkpoint data, "
     #         "all the worker processes must have access to the directory."))
-
     parser.add_argument("--exp",default=Path("./exp"), type=Path,
                         help="The directory to save checkpoints and logs.")
-    parser.add_argument("--checkpoint", default=Path("./exp/checkpoint"), type=Path,
-                        help="The directory to save checkpoints")
+    parser.add_argument("--checkpoint", default=0, help="checkpoint model")
+
     #Training Options
     parser.add_argument("--batch_size", default=8, type=int)
     parser.add_argument("--num_speakers",default=2, type=int,
@@ -73,7 +72,6 @@ def main():
     #抄的是audio-conv-tasnet里的train里面的main
     args = get_args()
     args.exp.mkdir(parents=True, exist_ok=True)
-    args.checkpoint.mkdir(parents=True, exist_ok=True)
     if "sox_io" in torchaudio.list_audio_backends():
         torchaudio.set_audio_backend("sox_io")
 
