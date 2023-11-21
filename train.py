@@ -35,7 +35,6 @@ def get_args():
                         help="The directory to save checkpoints and logs.")
     parser.add_argument("--checkpoint", default=0, help="checkpoint model")
 
-
     #Training Options
     parser.add_argument("--batch_size", default=8, type=int)
     parser.add_argument("--num_speakers",default=2, type=int,
