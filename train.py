@@ -71,8 +71,9 @@ def get_args():
 def main():
     #抄的是audio-conv-tasnet里的train里面的main
     args = get_args()
-    args.save_dir.mkdir(parents=True, exist_ok=True)
+    savedir = args.save_dir
     args.model_save_path.mkdir(parents=True, exist_ok=True)
+    model_path = args.model_save_path
     if "sox_io" in torchaudio.list_audio_backends():
         torchaudio.set_audio_backend("sox_io")
 
@@ -231,9 +232,9 @@ def main():
 
         lr_scheduler.step(valid_metric.si_snri)
 
-        save_path = os.path.join(args.save_dir, f"epoch_{epoch}.pt")
+        save_modelpath = os.path.join(model_path, f"epoch_{epoch}.pt")
         dist_utils.save_on_master(
-            save_path,
+            save_modelpath,
             {
                 "model": model.module.state_dict(),
                 "optimizer": optimizer.state_dict(),
@@ -242,7 +243,7 @@ def main():
                 "epoch": epoch,
             },
         )
-        print('Saved checkpoint model to ' + save_path + ' Successfully')
+        print('Saved checkpoint model to ' + save_modelpath + ' Successfully')
 
 if __name__ == '__main__':
     main()
