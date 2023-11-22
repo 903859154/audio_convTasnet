@@ -31,9 +31,9 @@ def get_args():
     # parser.add_argument("--save-dir", default=Path("./exp"), required=True, type=pathlib.Path, help=("Directory where the checkpoints and logs are saved."
     #         "Though, only the worker 0 saves checkpoint data, "
     #         "all the worker processes must have access to the directory."))
-    parser.add_argument("--exp",default=Path("./exp"), type=Path,
+    parser.add_argument("--save_dir",default=Path("./exp"), type=Path,
                         help="The directory to save checkpoints and logs.")
-    parser.add_argument("--checkpoint", help="checkpoint model")
+    parser.add_argument("--model_save_path",default=Path("./exp/model"), type=Path, help="saved model path")
 
     #Training Options
     parser.add_argument("--batch_size", default=8, type=int)
@@ -61,7 +61,7 @@ def get_args():
                         )
     parser.add_argument("--grad_clip", metavar="CLIP_VALUE", default=5.0,type=float,
                        help="Gradient clip value (l2 norm). (default: 5.0)",)
-    parser.add_argument("--resume", metavar="./exp/model",
+    parser.add_argument("--resume", metavar="CHECKPOINT_PATH",
                        help="Previous checkpoint file from which the training is resumed.",)
     parser.add_argument("--debug", action="store_true", help="Enable debug log")
 
@@ -71,7 +71,8 @@ def get_args():
 def main():
     #抄的是audio-conv-tasnet里的train里面的main
     args = get_args()
-    args.exp.mkdir(parents=True, exist_ok=True)
+    args.save_dir.mkdir(parents=True, exist_ok=True)
+    args.model_save_path.mkdir(parents=True, exist_ok=True)
     if "sox_io" in torchaudio.list_audio_backends():
         torchaudio.set_audio_backend("sox_io")
 
@@ -98,7 +99,7 @@ def main():
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '5678'
     dist.init_process_group(backend='gloo', init_method='env://',rank=0, world_size=1) #bug: 调用torch.distributed下任何函数前，必须运行torch.distributed.init_process_group(backend='nccl')初始化。
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device] if torch.cuda.is_available() else None)
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device])
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
     if args.resume:
@@ -106,7 +107,7 @@ def main():
         model.module.load_state_dict(checkpoint["model"])
         optimizer.load_state_dict(checkpoint["optimizer"])
     else:
-        dist_utils.synchronize_params(str(args.exp / "tmp.pt"), device, model, optimizer)
+        dist_utils.synchronize_params(str(args.save_dir / "tmp.pt"), device, model, optimizer)
 
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", factor=0.5, patience=3)
 
@@ -141,7 +142,7 @@ def main():
         debug=args.debug,
     )
 
-    log_path = args.exp / "log.csv"
+    log_path = args.save_dir / "log.csv"
     dist_utils._write_header(log_path, args)
     dist_utils.write_csv_on_master(
         log_path,
@@ -230,7 +231,7 @@ def main():
 
         lr_scheduler.step(valid_metric.si_snri)
 
-        save_path = args.checkpoint / f"epoch_{epoch}.pt"
+        save_path = os.path.join(args.save_dir, f"epoch_{epoch}.pt")
         dist_utils.save_on_master(
             save_path,
             {
@@ -241,7 +242,7 @@ def main():
                 "epoch": epoch,
             },
         )
-        print('Saved checkpoint model to ' + str(save_path) + 'Successfully')
+        print('Saved checkpoint model to ' + save_path + ' Successfully')
 
 if __name__ == '__main__':
     main()
