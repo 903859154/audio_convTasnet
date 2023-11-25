@@ -53,8 +53,6 @@ def _set_env_vars(world_size, rank, local_rank):
 
 def save_on_master(path, obj):
     if dist.get_rank() == 0:
-        print(dist.get_rank())
-        print('是0 啊')
         _LG.info("Saving %s", path)
         torch.save(obj, path)
 

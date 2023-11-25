@@ -77,7 +77,7 @@ def main():
     if "sox_io" in torchaudio.list_audio_backends():
         torchaudio.set_audio_backend("sox_io")
 
-    start_epoch = 1
+
     if args.resume:
         checkpoint = torch.load(args.resume)
         if args.sample_rate != checkpoint["sample_rate"]:
@@ -90,7 +90,10 @@ def main():
                 "The provided #of speakers ({args.num_speakers}) does not match "
                 "the #of speakers from the check point ({checkpoint['num_speakers']}.)"
             )
-        start_epoch = checkpoint["epoch"]
+        # start_epoch = checkpoint["epoch"]
+        start_epoch = checkpoint.get('epoch') + 1
+    else:
+        start_epoch = 1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     _LG.info("Using: %s", device)
@@ -158,7 +161,7 @@ def main():
     )
 
     _LG.info_on_master("Running %s epochs", args.epochs)
-    for epoch in range(start_epoch, start_epoch + args.epochs):
+    for epoch in range(start_epoch, args.epochs):
         print("-------training start-------")
         start_time = time.time()
         _LG.info_on_master("=" * 70)
@@ -199,10 +202,10 @@ def main():
         t0 = time.monotonic()
         eval_metric = executor1.evaluate()
         eval_sps = num_eval_samples / (time.monotonic() - t0)
-        print("eval: %s: ", eval_metric)
+        print("eval: ", eval_metric)
         eval_min = (time.time() - start_time) / 60
         eval_sec = (time.time() - start_time) % 60
-        print('Train Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, eval_min, eval_sec))
+        print('Eval Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, eval_min, eval_sec))
         _LG.info_on_master(" Eval: ", eval_metric)
 
         _LG.info_on_master("-" * 70)
