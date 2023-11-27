@@ -147,7 +147,7 @@ def main():
     )
 
     log_path = args.save_dir / "log.csv"
-    dist_utils._write_header(log_path, args)
+    # dist_utils._write_header(log_path, args) 写入配置信息，我觉得写不写都无所谓
     dist_utils.write_csv_on_master(
         log_path,
         [

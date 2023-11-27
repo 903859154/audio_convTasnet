@@ -8,6 +8,7 @@ import torch.distributed as dist
 import torchaudio
 
 
+
 def _info_on_master(self, *args, **kwargs):
     if dist.get_rank() == 0:
         self.info(*args, **kwargs)
@@ -19,9 +20,7 @@ def getLogger(name):
     logger.info_on_master = types.MethodType(_info_on_master, logger)
     return logger
 
-
 _LG = getLogger(__name__)
-
 
 def setup_distributed(world_size, rank, local_rank, backend="nccl", init_method="env://"):
     """Perform env setup and initialization for distributed training"""
@@ -56,15 +55,6 @@ def save_on_master(path, obj):
         _LG.info("Saving %s", path)
         torch.save(obj, path)
 
-
-def write_csv_on_master(path, *rows):
-    if dist.get_rank() == 0:
-        with open(path, "a", newline="") as fileobj:
-            writer = csv.writer(fileobj)
-            for row in rows:
-                writer.writerow(row)
-
-
 def synchronize_params(path, device, *modules):
     if dist.get_world_size() < 2:
         return
@@ -98,3 +88,10 @@ def _write_header(log_path, args):
         rows.append([f"#   {key}: {item}"])
 
     write_csv_on_master(log_path, *rows)
+
+def write_csv_on_master(path, *rows):
+    if dist.get_rank() == 0:
+        with open(path, "a", newline="") as fileobj:
+            writer = csv.writer(fileobj)
+            for row in rows:
+                writer.writerow(row)
