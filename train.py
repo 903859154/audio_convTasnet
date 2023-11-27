@@ -93,7 +93,7 @@ def main():
         # start_epoch = checkpoint["epoch"]
         start_epoch = checkpoint.get('epoch') + 1
     else:
-        start_epoch = 1
+        start_epoch = 0
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     _LG.info("Using: %s", device)
