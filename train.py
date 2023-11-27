@@ -6,7 +6,7 @@ import dataset
 import executor
 from argparse import ArgumentParser
 from pathlib import Path
-
+from tensorboardX import SummaryWriter
 import torch
 import torchaudio
 import torch.distributed as dist
@@ -34,6 +34,9 @@ def get_args():
     parser.add_argument("--save_dir",default=Path("./exp"), type=Path,
                         help="The directory to save checkpoints and logs.")
     parser.add_argument("--model_save_path",default=Path("./exp/model"), type=Path, help="saved model path")
+    parser.add_argument('--tensorboard_dir',
+                        default='tensorboard',
+                        help='tensorboard log dir')
 
     #Training Options
     parser.add_argument("--batch_size", default=8, type=int)
@@ -71,9 +74,14 @@ def get_args():
 def main():
     #抄的是audio-conv-tasnet里的train里面的main
     args = get_args()
-    savedir = args.save_dir
-    args.model_save_path.mkdir(parents=True, exist_ok=True)
-    model_path = args.model_save_path
+
+    writer = None
+    if dist.get_rank == 0:
+        args.model_save_path.mkdir(parents=True, exist_ok=True)
+        model_path = args.model_save_path
+        exp_id = os.path.basename(model_path)
+        writer = SummaryWriter(os.path.join(args.tensorboard_dir, exp_id))
+
     if "sox_io" in torchaudio.list_audio_backends():
         torchaudio.set_audio_backend("sox_io")
 
@@ -174,14 +182,12 @@ def main():
         t0 = time.monotonic()
         executor1.train_one_epoch()
         train_sps = num_train_samples / (time.monotonic() - t0)
-
-        _LG.info_on_master("-" * 70)
         train_min = (time.time() - start_time) / 60
         train_sec = (time.time() - start_time) % 60
-        # print(train_min)
-        # print(train_sec)
         print('Train Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, train_min,train_sec))
         print("============training over========")
+
+        _LG.info_on_master("-" * 70)
 
         #验证
         print("-------validate start------")
@@ -219,6 +225,10 @@ def main():
         print('Epoch {} CV info valid_metric.sdri, {}'.format(epoch, valid_metric.sdri))
         print('Epoch {} CV info eval_metric.si_snri, {}'.format(epoch, eval_metric.si_snri))
         print('Epoch {} CV info eval_metric.sdri, {}'.format(epoch, eval_metric.sdri))
+        writer.add_scalar('valid_si_snri: ',valid_metric.si_snri, epoch)
+        writer.add_scalar('valid_sdri: ',valid_metric.sdri, epoch)
+        writer.add_scalar('eval_si_snri: ',eval_metric.si_snri, epoch)
+        writer.add_scalar('eval_si_snri: ',eval_metric.sdri, epoch)
         print('---------------------------')
 
         dist_utils.write_csv_on_master(
