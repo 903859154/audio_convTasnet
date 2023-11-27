@@ -212,8 +212,8 @@ def main():
         eval_min = (time.time() - start_time) / 60
         eval_sec = (time.time() - start_time) % 60
         print('Eval Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, eval_min, eval_sec))
+        print('---------------------------')
         _LG.info_on_master(" Eval: ", eval_metric)
-
         _LG.info_on_master("-" * 70)
 
         _LG.info_on_master("Train: Speed: %6.2f [samples/sec]", train_sps)
@@ -228,7 +228,7 @@ def main():
         writer.add_scalar('valid_si_snri: ',valid_metric.si_snri, epoch)
         writer.add_scalar('valid_sdri: ',valid_metric.sdri, epoch)
         writer.add_scalar('eval_si_snri: ',eval_metric.si_snri, epoch)
-        writer.add_scalar('eval_si_snri: ',eval_metric.sdri, epoch)
+        writer.add_scalar('eval_sdri: ',eval_metric.sdri, epoch)
         print('---------------------------')
 
         dist_utils.write_csv_on_master(
