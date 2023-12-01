@@ -13,7 +13,6 @@ def _info_on_master(self, *args, **kwargs):
     if dist.get_rank() == 0:
         self.info(*args, **kwargs)
 
-
 def getLogger(name):
     """Get logging.Logger module with additional ``info_on_master`` method."""
     logger = logging.getLogger(name)
