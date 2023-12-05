@@ -112,7 +112,7 @@ def main():
     os.environ['MASTER_PORT'] = '5678'
     dist.init_process_group(backend='gloo', init_method='env://',rank=0, world_size=1) #bug: 调用torch.distributed下任何函数前，必须运行torch.distributed.init_process_group(backend='nccl')初始化。
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device])
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-5)
 
     if args.resume:
         _LG.info("Loading parameters from the checkpoint...")
@@ -167,6 +167,10 @@ def main():
             "eval_sdri",
         ],
     )
+    # 早停示例
+    best_valid_metric = float('-inf')
+    patience = 5
+    patience_counter = 0
 
     _LG.info_on_master("Running %s epochs", args.epochs)
     for epoch in range(start_epoch, args.epochs):
@@ -198,6 +202,18 @@ def main():
         val_min = (time.time() - start_time) / 60
         val_sec = (time.time() - start_time) % 60
         print('Val Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, val_min, val_sec))
+
+        # 在验证集上检查性能
+        current_valid_metric = valid_metric.si_snri
+        if current_valid_metric > best_valid_metric:
+            best_valid_metric = current_valid_metric
+            patience_counter = 0
+        else:
+            patience_counter += 1
+
+        if patience_counter >= patience:
+            print(f'Early stopping triggered after {epoch} epochs.')
+            break
         print("============validate over========")
         _LG.info_on_master("Valid: ", valid_metric)
 

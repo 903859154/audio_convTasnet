@@ -46,7 +46,7 @@ def get_dataloader(
         Returns:
             tuple: (train_loader, valid_loader, eval_loader)
     """
-    trainset, valset, testset = get_dataset(dateset_type, root_dir, num_speakers,sample_rate,librimix_task, librimix_tr_split)
+    trainset, valset, testset = get_dataset(dateset_type, root_dir, num_speakers, sample_rate, librimix_task, librimix_tr_split)
     train_collate_fn = get_collate_fn(dateset_type, mode='train', sample_rate=sample_rate, duration=3)
     test_collate_fn = get_collate_fn(dateset_type, mode='test', sample_rate=sample_rate, duration=3)
 
@@ -67,12 +67,15 @@ def get_collate_fn(dataset_type, mode, sample_rate=None, duration=4):
         return partial(collate_fn_wsj0mix_test, sample_rate=sample_rate)
     raise ValueError(f"Unexpected dataset: {dataset_type}")
 
-def collate_fn_wsj0mix_train(samples: List[wsj0mix.SampleType], sample_rate, duration):
+def collate_fn_wsj0mix_train(samples: List[wsj0mix.SampleType], sample_rate, duration, augment=True):
     target_num_frames = int(duration * sample_rate)
 
     mixes, srcs, masks = [], [], []
     for sample in samples:
         mix, src, mask = _fix_num_frames(sample, target_num_frames, sample_rate, random_start=True)
+
+        if augment: #注：只可在训练中增强
+            mix, src = augment_audio(mix,src,sample_rate)
 
         mixes.append(mix)
         srcs.append(src)
@@ -117,3 +120,14 @@ def collate_fn_wsj0mix_test(samples: List[wsj0mix.SampleType], sample_rate):
         masks.append(mask)
 
     return Batch(torch.stack(mixes, 0), torch.stack(srcs, 0), torch.stack(masks, 0))
+
+def augment_audio(mix, src, sample_rate, noise_factor=0.005, pitch_factor=0.2):
+    # 添加随机噪声
+    noise = torch.randn_like(mix) * noise_factor
+    augmented_mix = mix + noise
+    augmented_src = src + noise.unsqueeze(0).expand_as(src)
+
+    # 改变音调（可选，需要额外实现）
+    # ...
+
+    return augmented_mix, augmented_src
