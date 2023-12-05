@@ -76,12 +76,21 @@ def main():
     args = get_args()
 
     writer = None
-    if dist.get_rank == 0:
+
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '5678'
+    dist.init_process_group(backend='gloo', init_method='env://', rank=0,
+                            world_size=1)  # bug: 调用torch.distributed下任何函数前，必须运行torch.distributed.init_process_group(backend='nccl')初始化。
+
+    if dist.get_rank() == 0:
         args.model_save_path.mkdir(parents=True, exist_ok=True)
         model_path = args.model_save_path
+        if model_path is None:
+            raise ValueError("model_path is not set or is None")
         exp_id = os.path.basename(model_path)
         writer = SummaryWriter(os.path.join(args.tensorboard_dir, exp_id))
-
+    else:
+        writer = None
     if "sox_io" in torchaudio.list_audio_backends():
         torchaudio.set_audio_backend("sox_io")
 
@@ -108,9 +117,7 @@ def main():
     model = get_model(num_sources=args.num_speakers)
     model.to(device)
 
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '5678'
-    dist.init_process_group(backend='gloo', init_method='env://',rank=0, world_size=1) #bug: 调用torch.distributed下任何函数前，必须运行torch.distributed.init_process_group(backend='nccl')初始化。
+
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device])
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-5)
 
@@ -169,7 +176,7 @@ def main():
     )
     # 早停示例
     best_valid_metric = float('-inf')
-    patience = 5
+    patience = 10
     patience_counter = 0
 
     _LG.info_on_master("Running %s epochs", args.epochs)
@@ -203,7 +210,7 @@ def main():
         val_sec = (time.time() - start_time) % 60
         print('Val Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, val_min, val_sec))
 
-        # 在验证集上检查性能
+        # 早停：在验证集上检查性能
         current_valid_metric = valid_metric.si_snri
         if current_valid_metric > best_valid_metric:
             best_valid_metric = current_valid_metric
@@ -216,11 +223,10 @@ def main():
             break
         print("============validate over========")
         _LG.info_on_master("Valid: ", valid_metric)
-
         _LG.info_on_master("-" * 70)
 
         #评估
-        print("-------validate start------")
+        print("-------Eval start------")
         t0 = time.monotonic()
         eval_metric = executor1.evaluate()
         eval_sps = num_eval_samples / (time.monotonic() - t0)
@@ -241,10 +247,12 @@ def main():
         print('Epoch {} CV info valid_metric.sdri, {}'.format(epoch, valid_metric.sdri))
         print('Epoch {} CV info eval_metric.si_snri, {}'.format(epoch, eval_metric.si_snri))
         print('Epoch {} CV info eval_metric.sdri, {}'.format(epoch, eval_metric.sdri))
-        writer.add_scalar('valid_si_snri: ',valid_metric.si_snri, epoch)
-        writer.add_scalar('valid_sdri: ',valid_metric.sdri, epoch)
-        writer.add_scalar('eval_si_snri: ',eval_metric.si_snri, epoch)
-        writer.add_scalar('eval_sdri: ',eval_metric.sdri, epoch)
+        if writer is not None:
+            writer.add_scalar('valid_si_snri: ',valid_metric.si_snri, epoch)
+            writer.add_scalar('valid_sdri: ',valid_metric.sdri, epoch)
+            writer.add_scalar('eval_si_snri: ',eval_metric.si_snri, epoch)
+            writer.add_scalar('eval_sdri: ',eval_metric.sdri, epoch)
+            print('writer Succeeded!!!!!!!!')
         print('---------------------------')
 
         dist_utils.write_csv_on_master(

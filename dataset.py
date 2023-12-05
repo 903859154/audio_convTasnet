@@ -125,7 +125,8 @@ def augment_audio(mix, src, sample_rate, noise_factor=0.005, pitch_factor=0.2):
     # 添加随机噪声
     noise = torch.randn_like(mix) * noise_factor
     augmented_mix = mix + noise
-    augmented_src = src + noise.unsqueeze(0).expand_as(src)
+
+    augmented_src = src + noise.expand_as(src)
 
     # 改变音调（可选，需要额外实现）
     # ...
