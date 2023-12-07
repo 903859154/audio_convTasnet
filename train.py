@@ -195,7 +195,7 @@ def main():
         train_sps = num_train_samples / (time.monotonic() - t0)
         train_min = (time.time() - start_time) / 60
         train_sec = (time.time() - start_time) % 60
-        print('Train Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, train_min,train_sec))
+        print('Train Summary | End of Epoch {0} | Time：{1:f}min-{2:f}s | '.format(epoch, train_min,train_sec))
         print("============training over========")
 
         _LG.info_on_master("-" * 70)
@@ -208,7 +208,7 @@ def main():
         print("valid: ", valid_metric)
         val_min = (time.time() - start_time) / 60
         val_sec = (time.time() - start_time) % 60
-        print('Val Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, val_min, val_sec))
+        print('Val Summary | End of Epoch {0} | Time：{1:f}min-{2:f}s | '.format(epoch, val_min, val_sec))
 
         # 早停：在验证集上检查性能
         current_valid_metric = valid_metric.si_snri
@@ -233,7 +233,7 @@ def main():
         print("eval: ", eval_metric)
         eval_min = (time.time() - start_time) / 60
         eval_sec = (time.time() - start_time) % 60
-        print('Eval Summary | End of Epoch {0} | Time：{1:.2f}min-{2:.2f}s | '.format(epoch, eval_min, eval_sec))
+        print('Eval Summary | End of Epoch {0} | Time：{1:f}min-{2:f}s | '.format(epoch, eval_min, eval_sec))
         print('---------------------------')
         _LG.info_on_master(" Eval: ", eval_metric)
         _LG.info_on_master("-" * 70)

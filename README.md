@@ -5,11 +5,22 @@ recombination of audio_contasnet
 还没写run.sh
 目前就先用这行来直接运行吧
 ```java
-python audio_convTasnet/train.py --dataset wsj0mix --root_dir /home/zzy/data/min/ --batch_size 16 --resume /home/zzy/audio_convTasnet/exp/model/epoch_159.pt 
-
 ------------------------------------------------------
+step1：创建conda环境并进入该虚拟环境
+conda create -n zzypython3.8 python=3.8
+conda activate zzypython3.8
 
-python train.py --dataset wsj0mix --root_dir /home/zzy/data/min/ --epochs 160 --batch_size 16 --resume /home/zzy/audio_convTasnet/exp/model/epoch
+step2:下载pytorch环境
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+
+step3:进入到conv-tasnet项目
+cd audio_convTasnet
+
+step4:启动
+python train.py --dataset wsj0mix --root_dir /home/zzy/data/min/ --epochs 160 --batch_size 16 --resume /home/zzy/audio_convTasnet/exp/model/epoch_0.pt --tensorboard_dir /home/zzy/audio_convTasnet/exp/tensorboard
+
+在训练完成后，可以用以下命令进行loss可视化
+python -m tensorboard.main --logdir exp/tensorboard/
 ```
 数据可选wsj0 也可以选librimix ，目前我主要用的是wsj0
 
