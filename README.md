@@ -17,8 +17,13 @@ step3:进入到conv-tasnet项目
 cd audio_convTasnet
 
 step4:启动
+wsj0-mix版本：
 python train.py --dataset wsj0mix --root_dir /home/zzy/data/min/ --epochs 160 --batch_size 16 --resume /home/zzy/audio_convTasnet/exp/model/epoch_0.pt --tensorboard_dir /home/zzy/audio_convTasnet/exp/tensorboard
 
+或者
+
+Librimix版本：
+python train.py --dataset librimix --root_dir /home/zzy/data/libri/Libri2Mix/wav8k/min/ --librimix-tr-split train-100 --epochs 120 --batch_size 16  --tensorboard_dir /home/zzy/audio_convTasnet/exp/tensorboard
 在训练完成后，可以用以下命令进行loss可视化
 python -m tensorboard.main --logdir exp/tensorboard/
 ```
