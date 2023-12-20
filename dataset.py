@@ -16,16 +16,17 @@ def get_dataset(
         root_dir,
         num_speakers,
         sample_rate,
-        task=None, librimix_tr_split=None
+        librimix_task=None,
+        librimix_tr_split=None
 ):
     if dataset_type == "wsj0mix":
         train = wsj0mix.WSJ0Mix(root_dir / "tr", num_speakers, sample_rate)
         validation = wsj0mix.WSJ0Mix(root_dir / "cv", num_speakers, sample_rate)
         evaluation = wsj0mix.WSJ0Mix(root_dir / "tt", num_speakers, sample_rate)
     elif dataset_type == "librimix":
-        train = LibriMix(root_dir, librimix_tr_split, num_speakers, sample_rate, task)
-        validation = LibriMix(root_dir, "dev", num_speakers, sample_rate, task)
-        evaluation = LibriMix(root_dir, "test", num_speakers, sample_rate, task)
+        train = LibriMix(root_dir, librimix_tr_split, num_speakers, sample_rate, librimix_task)
+        validation = LibriMix(root_dir, "dev", num_speakers, sample_rate, librimix_task)
+        evaluation = LibriMix(root_dir, "test", num_speakers, sample_rate, librimix_task)
     else:
         raise ValueError(f"Unexpected dataset: {dataset_type}")
     return train, validation, evaluation
