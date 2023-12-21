@@ -27,6 +27,6 @@ python train.py --dataset librimix --root_dir /home/zzy/data/libri/ --librimix-t
 在训练完成后，可以用以下命令进行loss可视化
 python -m tensorboard.main --logdir exp/tensorboard/
 ```
-数据可选wsj0 也可以选librimix ，目前我主要用的是wsj0
+数据可选wsj0 也可以选librimix
 
 这个readme就算v1吧，还没完工

@@ -193,9 +193,9 @@ def main():
         t0 = time.monotonic()
         executor1.train_one_epoch()
         train_sps = num_train_samples / (time.monotonic() - t0)
-        train_min = (time.time() - start_time) / 60
-        train_sec = (time.time() - start_time) % 60
-        print('Train Summary | End of Epoch {0} | Time：{1:f}min-{2:f}s | '.format(epoch, train_min,train_sec))
+        train_min = int((time.time() - start_time) / 60)
+        train_sec = int((time.time() - start_time) % 60)
+        print('Train Summary | End of Epoch {0} | Time：{1:d}min-{2:d}s | '.format(epoch, train_min,train_sec))
         print("============training over========")
 
         _LG.info_on_master("-" * 70)
@@ -206,9 +206,9 @@ def main():
         valid_metric = executor1.validate()
         valid_sps = num_valid_samples / (time.monotonic() - t0)
         print("valid: ", valid_metric)
-        val_min = (time.time() - start_time) / 60
-        val_sec = (time.time() - start_time) % 60
-        print('Val Summary | End of Epoch {0} | Time：{1:f}min-{2:f}s | '.format(epoch, val_min, val_sec))
+        val_min = int((time.time() - start_time) / 60)
+        val_sec = int((time.time() - start_time) % 60)
+        print('Val Summary | End of Epoch {0} | Time：{1:d}min-{2:d}s | '.format(epoch, val_min, val_sec))
 
         # 早停：在验证集上检查性能
         current_valid_metric = valid_metric.si_snri
@@ -231,9 +231,9 @@ def main():
         eval_metric = executor1.evaluate()
         eval_sps = num_eval_samples / (time.monotonic() - t0)
         print("eval: ", eval_metric)
-        eval_min = (time.time() - start_time) / 60
-        eval_sec = (time.time() - start_time) % 60
-        print('Eval Summary | End of Epoch {0} | Time：{1:f}min-{2:f}s | '.format(epoch, eval_min, eval_sec))
+        eval_min = int((time.time() - start_time) / 60)
+        eval_sec = int((time.time() - start_time) % 60)
+        print('Eval Summary | End of Epoch {0} | Time：{1:d}min-{2:d}s | '.format(epoch, eval_min, eval_sec))
         print('---------------------------')
         _LG.info_on_master(" Eval: ", eval_metric)
         _LG.info_on_master("-" * 70)
