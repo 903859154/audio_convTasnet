@@ -28,6 +28,8 @@ python train.py --dataset librimix --root_dir /home/zzy/data/libri/ --librimix-t
 
 在训练完成后，可以用以下命令进行loss可视化
 python -m tensorboard.main --logdir exp/tensorboard/
+或
+tensorboard --logdir exp/tensorboard --port 12589 --bind_all
 ```
 数据可选wsj0 也可以选librimix
 
